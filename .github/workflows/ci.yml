@@ -2,11 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
@@ -18,8 +16,10 @@ jobs:
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_pass
+        ports:
+          - 5432:5432  # Критически важно!
         options: >-
-          --health-cmd "pg_isready -h localhost -U test_user"
+          --health-cmd "pg_isready -h postgres -U test_user -d test_db"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -27,33 +27,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Wait for Postgres to be ready
+      - name: Wait for PostgreSQL
         run: |
-          for i in {1..30}; do
-            if pg_isready -h postgres -p 5432 -U test_user; then
-              echo "Postgres is ready!"
-              break
-            else
-              echo "Waiting for postgres..."
-              sleep 2
-            fi
+          echo "Waiting for PostgreSQL to start..."
+          for i in {1..15}; do
+            pg_isready -h localhost -U test_user -d test_db && echo "PostgreSQL ready!" && exit 0
+            echo "Attempt $i/15 - PostgreSQL not ready"
+            sleep 2
           done
-        env:
-          PGPASSWORD: test_pass
-
-      - name: Sleep a bit after Postgres ready
-        run: sleep 5
-
-      - name: Check Postgres status (debug)
-        run: pg_isready -h postgres -p 5432 -U test_user
+          echo "PostgreSQL failed to start!"
+          exit 1
         env:
           PGPASSWORD: test_pass
 
@@ -65,7 +53,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DB_HOST: localhost
+          DB_HOST: localhost  # Теперь правильно!
           DB_NAME: test_db
           DB_USER: test_user
           DB_PASSWORD: test_pass
