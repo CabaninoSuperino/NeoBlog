@@ -50,10 +50,10 @@ REST API для блоговой платформы с JWT-аутентифик�
     python manage.py migrate
     python manage.py runserver
     
-  Документация API
-  Доступна после запуска:
+Документация API
+Доступна после запуска:
   
-      http://localhost:8000/api/schema/swagger-ui/
+    http://localhost:8000/api/schema/swagger-ui/
 
 Использование API
 Аутентификация:
@@ -66,45 +66,45 @@ REST API для блоговой платформы с JWT-аутентифик�
 Эндпоинты
 Посты	
 
-        POST	/api/posts/	Создать пост (массово)
-        GET	/api/posts/	Список постов
-        GET	/api/posts/{id}/	Детали поста
-        POST	/api/posts/{id}/like/	Поставить/снять лайк
-        GET	/api/posts/{id}/view/	Увеличить просмотры
+    POST /api/posts/ Создать пост (массово)
+    GET	/api/posts/ Список постов
+    GET	/api/posts/{id}/ Детали поста
+    POST /api/posts/{id}/like/ Поставить/снять лайк
+    GET	/api/posts/{id}/view/ Увеличить просмотры
 
 Подпосты
 
-        POST	/api/subposts/	Создать подпост
-        GET	/api/subposts/	Список подпостов
-        GET	/api/subposts/{id}/	Детали подпоста
+    POST /api/subposts/	Создать подпост
+    GET	/api/subposts/ Список подпостов
+    GET	/api/subposts/{id}/	Детали подпоста
 
 Пример запроса
 
-        curl -X POST http://localhost:8000/api/posts/ \
-          -H "Authorization: Bearer <token>" \
-          -H "Content-Type: application/json" \
-          -d '[
-            {
-              "title": "Post 1",
-              "body": "Content 1",
-              "subposts": [
-                {"title": "Subpost 1.1", "body": "Content 1.1"},
-                {"title": "Subpost 1.2", "body": "Content 1.2"}
-              ]
-            }
-          ]'
+    curl -X POST http://localhost:8000/api/posts/ \
+        -H "Authorization: Bearer <token>" \
+        -H "Content-Type: application/json" \
+        -d '[
+        {
+            "title": "Post 1",
+            "body": "Content 1",
+            "subposts": [
+            {"title": "Subpost 1.1", "body": "Content 1.1"},
+            {"title": "Subpost 1.2", "body": "Content 1.2"}
+            ]
+        }
+        ]'
 
         
 Тестирование
 
-        docker-compose exec app pytest
-      # Или локально: pytest
+    docker-compose exec app pytest
+    # Или локально: pytest
       
 Проверка кода
 
-      ruff check .
-      black --check .
-      CI
+    ruff check .
+    black --check .
+    CI
 
 GitHub Actions выполняет
 - Тесты с покрытием ≥80%
