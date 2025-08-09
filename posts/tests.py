@@ -3,14 +3,19 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Post, Like
+import secrets
 
 User = get_user_model()
 
 
 class PostViewSetJWTTests(APITestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(username="user1", password="pass1")
-        self.user2 = User.objects.create_user(username="user2", password="pass2")
+        self.user1 = User.objects.create_user(
+            username="user1", password=secrets.token_urlsafe(8)
+        )
+        self.user2 = User.objects.create_user(
+            username="user2", password=secrets.token_urlsafe(8)
+        )
         self.post = Post.objects.create(
             title="Test post", body="Body", author=self.user1
         )
