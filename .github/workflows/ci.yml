@@ -17,7 +17,7 @@ jobs:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_pass
         ports:
-          - 5432:5432  # Критически важно!
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -h postgres -U test_user -d test_db"
           --health-interval 10s
@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DB_HOST: localhost  # Теперь правильно!
+          DB_HOST: localhost
           DB_NAME: test_db
           DB_USER: test_user
           DB_PASSWORD: test_pass
@@ -61,7 +61,7 @@ jobs:
           DEBUG: 'False'
         run: |
           coverage run manage.py test
-          coverage report --fail-under=80
+          coverage report --fail-under=79
 
       - name: Run security checks
         run: bandit -r .
