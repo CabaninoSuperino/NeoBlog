@@ -23,7 +23,7 @@ REST API для блоговой платформы с JWT-аутентифик�
     ```bash
     Отредактируйте .env:
       
-    SECRET_KEY=your_unique_secret_key  # Generate with: openssl rand -hex 32
+    SECRET_KEY=your_unique_secret_key  
     DB_NAME=blog
     DB_USER=django
     DB_PASSWORD=strong_password
