@@ -44,12 +44,10 @@ class PostViewSet(viewsets.ModelViewSet):
             like, created = Like.objects.get_or_create(user=request.user, post=post)
             if not created:
                 like.delete()
-                # Обновляем количество лайков
                 post.like_count = Like.objects.filter(post=post).count()
                 post.save(update_fields=["like_count"])
                 return Response({"status": "unliked"}, status=status.HTTP_200_OK)
             else:
-                # Обновляем количество лайков
                 post.like_count = Like.objects.filter(post=post).count()
                 post.save(update_fields=["like_count"])
                 return Response({"status": "liked"}, status=status.HTTP_201_CREATED)
