@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "posts",
+    'accounts',
+    'notifications',
+    'interactions',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django.middleware.csrf.CsrfViewMiddleware',
 ]
 
 ROOT_URLCONF = "blog.urls"
@@ -126,6 +130,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'post_list'
+LOGOUT_REDIRECT_URL = 'post_list'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -136,6 +144,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
 }
@@ -162,7 +171,14 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 print("DB_NAME:", repr(os.environ.get("DB_NAME")))
 print("DB_USER:", repr(os.environ.get("DB_USER")))
 print("DB_PASSWORD:", repr(os.environ.get("DB_PASSWORD")))
 print("DB_HOST:", repr(os.environ.get("DB_HOST")))
+
+
+SILENCED_SYSTEM_CHECKS = ['urls.W002']

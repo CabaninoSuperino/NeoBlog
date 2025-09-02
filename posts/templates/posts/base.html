@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NeoBlog{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'posts/css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <a href="{% url 'post_list' %}" class="logo">
+                <i class="fas fa-blog"></i>
+                <span>Neo</span>Blog
+            </a>
+
+            <div class="user-nav">
+                {% if user.is_authenticated %}
+                    <div class="nav-links">
+                        {% url 'favorites' as favorites_url %}
+                        {% url 'my_posts' as my_posts_url %}
+                        {% url 'inbox' as inbox_url %}
+
+                        <a href="{{ favorites_url }}" class="nav-link {% if request.path == favorites_url %}active{% endif %}">
+                            <i class="fas fa-star"></i> Нравиться
+                        </a>
+                        <a href="{{ my_posts_url }}" class="nav-link {% if request.path == my_posts_url %}active{% endif %}">
+                            <i class="fas fa-file-alt"></i> Мои посты
+                        </a>
+                        <a href="{{ inbox_url }}" class="nav-link {% if request.path == inbox_url %}active{% endif %}">
+                            <i class="fas fa-inbox"></i> Входящее
+                        </a>
+                    </div>
+
+                    <div class="user-info">
+                        <span class="username">@{{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="auth-buttons">
+                        <a href="{% url 'register' %}" class="auth-btn register-btn">
+                            <i class="fas fa-user-plus"></i> Регистрация
+                        </a>
+                        <a href="{% url 'login' %}" class="auth-btn login-btn">
+                            <i class="fas fa-sign-in-alt"></i> Войти
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2023 NeoBlog. Платформа для обмена идеями</p>
+            <div class="social-links">
+                <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'posts/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -24,6 +24,7 @@ class PostSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "body",
+            "image",
             "author",
             "views_count",
             "like_count",

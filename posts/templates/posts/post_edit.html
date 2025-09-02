@@ -1,0 +1,32 @@
+{% extends 'posts/base.html' %}
+
+{% block content %}
+<div class="post-edit">
+    <h1>Редактировать пост</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_title">Заголовок</label>
+            <input type="text" name="title" id="id_title"
+                   class="form-control" value="{{ form.title.value }}">
+        </div>
+
+        <div class="form-group">
+            <label for="id_body">Содержание</label>
+            <textarea name="body" id="id_body"
+                      class="form-control" rows="10">{{ form.body.value }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">
+                <i class="fas fa-save"></i> Сохранить изменения
+            </button>
+            <a href="{% url 'post_detail' post.id %}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Отмена
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

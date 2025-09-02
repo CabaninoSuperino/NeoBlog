@@ -1,0 +1,312 @@
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Обработка лайков на главной странице
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const postId = this.dataset.postId;
+            const likeBtn = this;
+            const likeCountEl = this.querySelector('.like-count');
+            const likeIcon = this.querySelector('i');
+
+            // Если кнопка заблокирована, ничего не делаем
+            if (likeBtn.disabled) return;
+
+            // Блокируем кнопку на время запроса
+            likeBtn.disabled = true;
+
+            fetch(`/api/posts/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status) {
+                    // Анимация иконки
+                    likeIcon.classList.add('pulse');
+                    setTimeout(() => likeIcon.classList.remove('pulse'), 600);
+
+                    // Обновляем счетчик
+                    likeCountEl.textContent = data.like_count;
+
+                    // Обновляем иконку и текст
+                    if (data.status === 'liked') {
+                        likeIcon.classList.replace('far', 'fas');
+                        likeBtn.querySelector('.like-text').textContent = 'Убрать лайк';
+                    } else {
+                        likeIcon.classList.replace('fas', 'far');
+                        likeBtn.querySelector('.like-text').textContent = 'Лайкнуть';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ошибка при установке лайка: ' + error.message);
+            })
+            .finally(() => {
+                likeBtn.disabled = false;
+            });
+        });
+    });
+});
+
+// Функция для получения CSRF токена
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+/* ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ УЛУЧШЕНИЯ ОТОБРАЖЕНИЯ */
+.post {
+    padding: 25px;
+    border-radius: 16px;
+    background: var(--card-bg);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 25px;
+    border: 1px solid rgba(80, 80, 100, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.post:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+    border-color: rgba(108, 92, 231, 0.4);
+}
+
+.post-header {
+    margin-bottom: 15px;
+}
+
+.post-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    background: linear-gradient(90deg, var(--accent), #a29bfe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.3;
+}
+
+.post-content {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid rgba(80, 80, 100, 0.2);
+}
+
+.author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.author::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.meta-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.stat .icon {
+    font-size: 1.2rem;
+}
+
+.stat.views .icon { color: var(--info); }
+.stat.likes .icon { color: var(--danger); }
+.stat.comments .icon { color: var(--success); }
+
+.like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.like-btn:hover:not(:disabled) {
+    background: rgba(108, 92, 231, 0.1);
+    color: var(--accent);
+}
+
+.like-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comment-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.comment-btn:hover {
+    background: rgba(108, 92, 231, 0.1);
+    color: var(--accent);
+}
+
+/* Стили для изображений */
+.post-image {
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.post-image img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.post:hover .post-image img {
+    transform: scale(1.02);
+}
+
+/* Анимация для лайков */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 0.5s ease;
+}
+</style>
+
+<div class="post-list">
+    {% for post in posts %}
+    <div class="post">
+        <div class="post-header">
+            <h2><a href="{% url 'post_detail' post.id %}">{{ post.title }}</a></h2>
+        </div>
+
+        <!-- Блок для изображения -->
+        {% if post.image %}
+        <div class="post-image">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}">
+        </div>
+        {% endif %}
+
+        <div class="post-content">
+            <p>{{ post.body|truncatechars:150 }}</p>
+        </div>
+
+        <div class="post-meta">
+            <span class="author">@{{ post.author.username }}</span>
+            <div class="meta-stats">
+                <div class="stat views" title="Просмотры">
+                    <i class="fas fa-eye icon"></i>
+                    <span class="views-count">{{ post.views_count }}</span>
+                </div>
+                <div class="stat likes" title="Лайки">
+                    <button class="like-btn" data-post-id="{{ post.id }}"
+                            {% if not user.is_authenticated or user == post.author %}disabled{% endif %}>
+                        <i class="{% if user in post.likes.all %}fas{% else %}far{% endif %} fa-heart icon"></i>
+                        <span class="like-count">{{ post.likes.count }}</span>
+                        <span class="like-text">
+                            {% if user in post.likes.all %}Убрать лайк{% else %}Лайкнуть{% endif %}
+                        </span>
+                    </button>
+                </div>
+                <div class="stat comments" title="Комментарии">
+                    <a href="{% url 'post_detail' post.id %}#comments" class="comment-btn">
+                        <i class="fas fa-comment icon"></i>
+                        <span class="comment-count">{{ post.comments.count }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Пагинация -->
+    {% if is_paginated %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1"><i class="fas fa-angle-double-left"></i> первая</a>
+                <a href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i> предыдущая</a>
+            {% endif %}
+
+            <span class="current">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">следующая <i class="fas fa-angle-right"></i></a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">последняя <i class="fas fa-angle-double-right"></i></a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

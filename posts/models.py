@@ -12,6 +12,12 @@ class Post(models.Model):
     views_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(
+        upload_to='posts/images/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение'
+    )
     like_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -29,10 +35,5 @@ class SubPost(models.Model):
         return f"{self.title} (подпост для {self.post.title})"
 
 
-class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, related_name="likes", on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ("user", "post")
+

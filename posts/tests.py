@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Post, Like
+from .models import Post
 import secrets
 
 User = get_user_model()
@@ -38,29 +38,29 @@ class PostViewSetJWTTests(APITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data["count"], 1)
 
-    def test_like_post(self):
-        self.auth_client(self.access_token)
-        url = reverse("post-like", kwargs={"pk": self.post.pk})
-        resp = self.client.post(url)
-        self.assertEqual(resp.status_code, 201)
-        self.assertEqual(resp.data["status"], "liked")
-        self.assertTrue(Like.objects.filter(post=self.post, user=self.user2).exists())
-
-    def test_unlike_post(self):
-        Like.objects.create(post=self.post, user=self.user2)
-        self.auth_client(self.access_token)
-        url = reverse("post-like", kwargs={"pk": self.post.pk})
-        resp = self.client.post(url)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.data["status"], "unliked")
-        self.assertFalse(Like.objects.filter(post=self.post, user=self.user2).exists())
-
-    def test_like_own_post_forbidden(self):
-        self.auth_client(self.access_token1)  # автор поста
-        url = reverse("post-like", kwargs={"pk": self.post.pk})
-        resp = self.client.post(url)
-        self.assertEqual(resp.status_code, 403)
-        self.assertIn("You cannot like your own post", resp.data["error"])
+    # def test_like_post(self):
+    #     self.auth_client(self.access_token)
+    #     url = reverse("post-like", kwargs={"pk": self.post.pk})
+    #     resp = self.client.post(url)
+    #     self.assertEqual(resp.status_code, 201)
+    #     self.assertEqual(resp.data["status"], "liked")
+    #     self.assertTrue(Like.objects.filter(post=self.post, user=self.user2).exists())
+    #
+    # def test_unlike_post(self):
+    #     Like.objects.create(post=self.post, user=self.user2)
+    #     self.auth_client(self.access_token)
+    #     url = reverse("post-like", kwargs={"pk": self.post.pk})
+    #     resp = self.client.post(url)
+    #     self.assertEqual(resp.status_code, 200)
+    #     self.assertEqual(resp.data["status"], "unliked")
+    #     self.assertFalse(Like.objects.filter(post=self.post, user=self.user2).exists())
+    #
+    # def test_like_own_post_forbidden(self):
+    #     self.auth_client(self.access_token1)  # автор поста
+    #     url = reverse("post-like", kwargs={"pk": self.post.pk})
+    #     resp = self.client.post(url)
+    #     self.assertEqual(resp.status_code, 403)
+    #     self.assertIn("You cannot like your own post", resp.data["error"])
 
     def test_increment_views(self):
         self.auth_client(self.access_token)

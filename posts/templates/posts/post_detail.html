@@ -1,0 +1,508 @@
+{% extends 'posts/base.html' %}
+
+{% block content %}
+<div class="post-detail" data-post-id="{{ post.id }}">
+    <h1>{{ post.title }}</h1>
+
+    <div class="post-meta">
+        <span class="author">@{{ post.author.username }}</span>
+        <div class="meta-stats">
+            <div class="stat views">
+                <i class="fas fa-eye"></i>
+                <span id="views-count">{{ post.views_count }}</span>
+            </div>
+            <div class="stat likes">
+                <i class="fas fa-heart"></i>
+                <span id="like-count">{{ post.likes.count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок для изображения в детальной странице -->
+    {% if post.image %}
+    <div class="post-image-detail">
+        <img src="{{ post.image.url }}" alt="{{ post.title }}">
+    </div>
+    {% endif %}
+
+    <div class="post-body">
+        {{ post.body|linebreaks }}
+    </div>
+
+    <div class="post-actions">
+        <button class="like-btn" id="like-btn" data-post-id="{{ post.id }}"
+                {% if not user.is_authenticated %}disabled{% endif %}>
+            <i class="{% if user_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+            <span class="like-text">
+                {% if user_liked %}Убрать лайк{% else %}Лайкнуть{% endif %}
+            </span>
+        </button>
+    </div>
+
+    <!-- Комментарии -->
+    <div class="comments-section" data-post-id="{{ post.id }}">
+        <h3>Комментарии ({{ post.comments.count }})</h3>
+
+        <div id="comments-list">
+            {% for comment in post.comments.all %}
+            <div class="comment" data-comment-id="{{ comment.id }}">
+                <div class="comment-header">
+                    <span class="comment-author">@{{ comment.author.username }}</span>
+                    <span class="comment-time">{{ comment.created_at|date:"d M Y H:i" }}</span>
+                </div>
+                <div class="comment-body">
+                    {{ comment.text|linebreaks }}
+                </div>
+                {% if comment.author == user %}
+                <div class="comment-actions">
+                    <button class="delete-comment-btn" data-comment-id="{{ comment.id }}">
+                        <i class="fas fa-trash"></i> Удалить
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="no-comments">Пока нет комментариев. Будьте первым!</p>
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="add-comment">
+            <textarea id="comment-input" placeholder="Напишите комментарий..."></textarea>
+            <button id="comment-btn" class="btn-send">
+                <i class="fas fa-paper-plane"></i> Отправить
+            </button>
+        </div>
+        {% else %}
+        <p class="login-prompt">Чтобы оставить комментарий, <a href="{% url 'login' %}">войдите в аккаунт</a>.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* ГЛОБАЛЬНЫЕ СТИЛИ */
+.post-detail {
+    max-width: 100% !important;
+    padding: 30px !important;
+    width: 100% !important;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(80, 80, 100, 0.2);
+    margin: 30px 0;
+}
+
+/* СТИЛИ ДЛЯ ИЗОБРАЖЕНИЯ В ДЕТАЛЬНОЙ СТРАНИЦЕ */
+.post-image-detail {
+    margin: 25px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.post-image-detail img {
+    max-width: 100%;
+    height: auto;
+    max-height: 600px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.post-image-detail:hover img {
+    transform: scale(1.02);
+}
+
+/* ТЕЛО ПОСТА */
+.post-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin: 30px 0;
+    padding: 25px 0;
+    border-top: 1px solid rgba(80, 80, 100, 0.3);
+    border-bottom: 1px solid rgba(80, 80, 100, 0.3);
+    color: var(--text-secondary);
+}
+
+/* КНОПКИ ДЕЙСТВИЙ */
+.post-actions {
+    margin-top: 30px;
+}
+
+.like-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 25px;
+    border-radius: 50px;
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.like-btn:hover {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.like-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.like-btn i {
+    font-size: 1.2rem;
+}
+
+/* КОММЕНТАРИИ */
+.comments-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(80, 80, 100, 0.2);
+}
+
+.comments-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comments-section h3:before {
+    content: '\f075';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: var(--accent);
+}
+
+#comments-list {
+    margin-bottom: 30px;
+}
+
+.comment {
+    background: rgba(30, 30, 45, 0.6);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 3px solid var(--accent);
+    transition: var(--transition);
+}
+
+.comment:hover {
+    background: rgba(40, 40, 55, 0.8);
+    transform: translateX(5px);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.comment-time {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+.comment-body {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 1rem;
+    padding: 0 5px;
+}
+
+.comment-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.delete-comment-btn {
+    background: rgba(255, 107, 129, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.delete-comment-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: rgba(30, 30, 45, 0.3);
+    border-radius: 12px;
+}
+
+.login-prompt {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    background: rgba(30, 30, 45, 0.3);
+    border-radius: 12px;
+}
+
+/* ПОЛЕ ВВОДА КОММЕНТАРИЯ */
+.add-comment {
+    display: flex;
+    flex-direction: column;
+    margin-top: 25px;
+}
+
+#comment-input {
+    width: 100% !important;
+    min-height: 120px;
+    padding: 15px !important;
+    border-radius: 12px;
+    border: 1px solid rgba(80, 80, 100, 0.4) !important;
+    font-size: 1rem;
+    resize: vertical;
+    box-sizing: border-box !important;
+    margin-bottom: 15px;
+    display: block !important;
+    font-family: inherit;
+    background: rgba(40, 40, 55, 0.5) !important;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+#comment-input:focus {
+    outline: none !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2) !important;
+    background: rgba(40, 40, 55, 0.8) !important;
+}
+
+#comment-input::placeholder {
+    color: rgba(160, 160, 192, 0.6);
+}
+
+.btn-send {
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+}
+
+.btn-send:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(108, 92, 231, 0.4);
+}
+
+/* АДАПТИВНОСТЬ */
+@media (max-width: 768px) {
+    .post-detail {
+        padding: 20px !important;
+    }
+
+    .post-image-detail img {
+        max-height: 400px;
+    }
+
+    .comment {
+        padding: 15px;
+    }
+
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .btn-send {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const likeBtn = document.getElementById('like-btn');
+    const postId = document.querySelector('.post-detail').dataset.postId;
+    const likeCount = document.getElementById('like-count');
+    const commentsList = document.getElementById('comments-list');
+    const commentBtn = document.getElementById('comment-btn');
+    const commentInput = document.getElementById('comment-input');
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function animateCounter(element, newValue) {
+        const start = parseInt(element.textContent);
+        const duration = 600;
+        const startTime = performance.now();
+        function update(time) {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const value = Math.floor(start + (newValue - start) * progress);
+            element.textContent = value;
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    // Лайки
+    if (likeBtn) {
+        likeBtn.addEventListener('click', () => {
+            fetch(`/api/posts/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status) {
+                    const icon = likeBtn.querySelector('i');
+                    const text = likeBtn.querySelector('.like-text');
+                    if (data.status === 'liked') icon.classList.replace('far', 'fas');
+                    else icon.classList.replace('fas', 'far');
+
+                    icon.classList.add('pulse');
+                    setTimeout(() => icon.classList.remove('pulse'), 600);
+
+                    animateCounter(likeCount, data.like_count);
+                    text.textContent = data.status === 'liked' ? 'Убрать лайк' : 'Лайкнуть';
+                }
+            });
+        });
+    }
+
+    // Отправка комментария
+    if (commentBtn) {
+        commentBtn.addEventListener('click', () => {
+            const body = commentInput.value.trim();
+            if (!body) {
+                alert('Комментарий не может быть пустым');
+                return;
+            }
+
+            fetch(`/api/posts/${postId}/comments/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: body })
+            })
+            .then(response => {
+                if (response.status === 400) {
+                    // Ошибка валидации
+                    return response.json().then(errorData => {
+                        const errorMessage = errorData.text ? errorData.text[0] :
+                                            errorData.non_field_errors ? errorData.non_field_errors[0] :
+                                            'Ошибка валидации';
+                        throw new Error(errorMessage);
+                    });
+                }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.id) {
+                    const div = document.createElement('div');
+                    div.classList.add('comment');
+                    div.dataset.commentId = data.id;
+                    div.innerHTML = `
+                        <span class="comment-author">@${data.author}</span>:
+                        <span class="comment-body">${data.text}</span>
+                        <button class="delete-comment-btn like-btn" data-comment-id="${data.id}">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    `;
+
+                    // Удаляем сообщение "Пока нет комментариев" если оно есть
+                    const emptyMessage = commentsList.querySelector('p');
+                    if (emptyMessage) emptyMessage.remove();
+
+                    commentsList.appendChild(div);
+                    commentInput.value = '';
+
+                    // Обновляем счетчик комментариев
+                    const commentsHeader = document.querySelector('.comments-section h3');
+                    const count = commentsList.querySelectorAll('.comment').length;
+                    commentsHeader.textContent = `Комментарии (${count})`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Ошибка при отправке комментария: ${error.message}`);
+            });
+        });
+    }
+
+    // Удаление комментария
+    commentsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.delete-comment-btn');
+        if (!btn) return;
+
+        const commentId = btn.dataset.commentId;
+        fetch(`/comments/delete/${commentId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        }).then(res => {
+            if (res.ok) {
+                const commentDiv = document.querySelector(`.comment[data-comment-id="${commentId}"]`);
+                if (commentDiv) commentDiv.remove();
+
+                // Обновляем счетчик комментариев
+                const commentsHeader = document.querySelector('.comments-section h3');
+                const count = commentsList.querySelectorAll('.comment').length;
+                commentsHeader.textContent = `Комментарии (${count})`;
+            } else {
+                alert("Вы не можете удалить этот комментарий");
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

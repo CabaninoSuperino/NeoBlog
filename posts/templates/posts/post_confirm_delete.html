@@ -1,0 +1,18 @@
+{% extends 'posts/base.html' %}
+
+{% block content %}
+<div class="delete-confirm">
+    <h2>Удалить пост?</h2>
+    <p>Вы уверены, что хотите удалить пост "{{ object.title }}"? Это действие нельзя отменить.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-delete">
+            <i class="fas fa-trash"></i> Да, удалить
+        </button>
+        <a href="{% url 'my_posts' %}" class="btn">
+            <i class="fas fa-times"></i> Отмена
+        </a>
+    </form>
+</div>
+{% endblock %}
